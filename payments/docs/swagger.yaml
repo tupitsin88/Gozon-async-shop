@@ -1,0 +1,90 @@
+definitions:
+  internal_handler.AccountRequest:
+    properties:
+      user_id:
+        type: string
+    type: object
+  internal_handler.DepositRequest:
+    properties:
+      amount:
+        type: integer
+      user_id:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/payments/balance:
+    get:
+      description: Получить текущий баланс
+      parameters:
+      - description: User UUID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              format: int64
+              type: integer
+            type: object
+      summary: Баланс счета
+      tags:
+      - payments
+  /api/payments/create_account:
+    post:
+      consumes:
+      - application/json
+      description: Создает новый счет для пользователя (баланс 0)
+      parameters:
+      - description: User ID
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.AccountRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Account created
+          schema:
+            type: string
+        "400":
+          description: Error
+          schema:
+            type: string
+      summary: Создание счета
+      tags:
+      - payments
+  /api/payments/deposit:
+    post:
+      consumes:
+      - application/json
+      description: Добавляет деньги на счет (идемпотентность не реализована в рамках
+        ДЗ для простоты API)
+      parameters:
+      - description: Данные пополнения
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.DepositRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated
+          schema:
+            type: string
+        "500":
+          description: Error
+          schema:
+            type: string
+      summary: Пополнение счета
+      tags:
+      - payments
+swagger: "2.0"

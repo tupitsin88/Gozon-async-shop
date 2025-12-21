@@ -50,7 +50,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// 1. Relay (отправка заказов) - УЖЕ ЕСТЬ
 	go service.StartRelay(ctx, db, producer)
+
+	// 2. Processor (чтение ответов) - ДОБАВИТЬ ЭТОТ БЛОК
+	processor := service.NewOrderProcessor(kafkaBrokers, db)
+	go processor.Start(ctx)
 
 	repo := storage.NewOrderRepository(db)
 	h := handler.NewHandler(repo)

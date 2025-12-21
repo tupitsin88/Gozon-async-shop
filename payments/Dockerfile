@@ -1,4 +1,13 @@
-FROM ubuntu:latest
-LABEL authors="timofey"
+FROM golang:1.25-alpine AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o payments-app ./cmd/main.go
 
-ENTRYPOINT ["top", "-b"]
+FROM alpine:latest
+WORKDIR /root/
+COPY --from=builder /app/payments-app .
+RUN apk add --no-cache tzdata
+EXPOSE 8081
+CMD ["./payments-app"]
