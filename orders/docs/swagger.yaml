@@ -1,0 +1,51 @@
+basePath: /
+definitions:
+  internal_handler.CreateOrderRequest:
+    properties:
+      amount:
+        type: integer
+      description:
+        type: string
+      user_id:
+        type: string
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  description: Сервис заказов с Transactional Outbox и WebSockets.
+  title: Gozon Orders API
+  version: "1.0"
+paths:
+  /api/orders:
+    post:
+      consumes:
+      - application/json
+      description: Создает заказ и асинхронно запускает процесс оплаты через Transactional
+        Outbox
+      parameters:
+      - description: Данные заказа
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Успешное создание
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Неверные данные
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            type: string
+      summary: Создание нового заказа
+      tags:
+      - orders
+swagger: "2.0"
