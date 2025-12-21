@@ -1,0 +1,96 @@
+services:
+  # BROKER (Kafka + Zookeeper)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - gozon-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on: [zookeeper]
+    ports: ["9092:9092"] # Порт для доступа с хоста к Kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      # Слушаем на двух портах: 29092 для докер-сети, 9092 для внешнего мира
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - gozon-net
+
+  # DATABASES
+  postgres-orders:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: orders_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports: ["5432:5432"] # Order DB на стандартном порту
+    volumes:
+      - pg_orders_data:/var/lib/postgresql/data
+    networks:
+      - gozon-net
+
+  postgres-payments:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: payments_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports: ["5433:5432"] # Payment DB на 5433
+    volumes:
+      - pg_payments_data:/var/lib/postgresql/data
+    networks:
+      - gozon-net
+
+  # MICROSERVICES
+  orders-service:
+    build: ./orders
+    ports: ["8080:8080"]
+    environment:
+      DATABASE_URL: postgres://user:password@postgres-orders:5432/orders_db?sslmode=disable
+      KAFKA_BROKERS: kafka:29092
+      HTTP_PORT: 8080
+    depends_on:
+      - postgres-orders
+      - kafka
+    networks:
+      - gozon-net
+
+  payments-service:
+    build: ./payments
+    ports: ["8081:8081"]
+    environment:
+      DATABASE_URL: postgres://user:password@postgres-payments:5432/payments_db?sslmode=disable
+      KAFKA_BROKERS: kafka:29092
+      HTTP_PORT: 8081
+    depends_on:
+      - postgres-payments
+      - kafka
+    networks:
+      - gozon-net
+
+  # API GATEWAY
+  gateway:
+    image: nginx:alpine
+    ports: ["8000:80"] # Весь трафик пойдет через localhost:8000
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - orders-service
+      - payments-service
+    networks:
+      - gozon-net
+
+volumes:
+  pg_orders_data:
+  pg_payments_data:
+
+networks:
+  gozon-net:
+    driver: bridge
