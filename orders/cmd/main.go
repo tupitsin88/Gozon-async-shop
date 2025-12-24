@@ -22,9 +22,15 @@ import (
 
 // @title           Gozon Orders API
 // @version         1.0
-// @description     Сервис заказов с Transactional Outbox и WebSockets.
-// @host            localhost:8000
-// @BasePath        /
+// @description     Сервис управления заказами.
+// @description     Реализует паттерн Transactional Outbox для гарантированной отправки событий в Kafka.
+// @description     Поддерживает Real-time уведомления клиентов через WebSockets.
+
+// @host      localhost:8000
+// @BasePath  /
+
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
 	dbConnStr := os.Getenv("DATABASE_URL")
 	if dbConnStr == "" {
@@ -40,21 +46,18 @@ func main() {
 	}
 
 	storage.InitSchema(db)
-
 	kafkaBrokers := os.Getenv("KAFKA_BROKERS")
 	if kafkaBrokers == "" {
-		kafkaBrokers = "localhost:9092" // Дефолт для локального запуска без докера
+		kafkaBrokers = "localhost:9092"
 	}
 	producer := broker.NewProducer(kafkaBrokers, "orders.created")
 	defer producer.Close()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	// 1. Relay (отправка заказов) - УЖЕ ЕСТЬ
+	wsHub := handler.NewWSHub()
+	http.HandleFunc("/ws", wsHub.HandleConnection)
 	go service.StartRelay(ctx, db, producer)
-
-	// 2. Processor (чтение ответов) - ДОБАВИТЬ ЭТОТ БЛОК
-	processor := service.NewOrderProcessor(kafkaBrokers, db)
+	processor := service.NewOrderProcessor(kafkaBrokers, db, wsHub)
 	go processor.Start(ctx)
 
 	repo := storage.NewOrderRepository(db)
@@ -62,6 +65,8 @@ func main() {
 	http.HandleFunc("/api/orders", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			h.CreateOrder(w, r)
+		} else if r.Method == http.MethodGet {
+			h.GetOrders(w, r)
 		} else {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}

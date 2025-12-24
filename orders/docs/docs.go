@@ -16,6 +16,36 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/api/orders": {
+            "get": {
+                "description": "Возвращает историю заказов пользователя",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Список заказов",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/storage.Order"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Создает заказ и асинхронно запускает процесс оплаты через Transactional Outbox",
                 "consumes": [
@@ -35,7 +65,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.CreateOrderRequest"
+                            "$ref": "#/definitions/handler.CreateOrderRequest"
                         }
                     }
                 ],
@@ -64,7 +94,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "internal_handler.CreateOrderRequest": {
+        "handler.CreateOrderRequest": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -77,7 +107,31 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "storage.Order": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
         }
+    },
+    "externalDocs": {
+        "description": "OpenAPI",
+        "url": "https://swagger.io/resources/open-api/"
     }
 }`
 
@@ -88,7 +142,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Gozon Orders API",
-	Description:      "Сервис заказов с Transactional Outbox и WebSockets.",
+	Description:      "Сервис управления заказами.\nРеализует паттерн Transactional Outbox для гарантированной отправки событий в Kafka.\nПоддерживает Real-time уведомления клиентов через WebSockets.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

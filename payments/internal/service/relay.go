@@ -18,7 +18,7 @@ type OutboxMsg struct {
 
 // StartRelay запускает бесконечный цикл проверки outbox
 func StartRelay(ctx context.Context, db *sql.DB, producer *broker.Producer) {
-	ticker := time.NewTicker(500 * time.Millisecond) // Проверяем каждые 0.5 сек
+	ticker := time.NewTicker(50 * time.Millisecond) // Проверяем каждые 0.5 сек
 	defer ticker.Stop()
 	for {
 		select {
@@ -60,7 +60,7 @@ func processBatch(ctx context.Context, db *sql.DB, producer *broker.Producer) {
 			continue
 		}
 
-		// Помечаем как обработанное (processed = true)
+		// Помечаем как обработанное
 		_, err = db.ExecContext(ctx, "UPDATE outbox SET processed = true WHERE id = $1", msg.ID)
 		if err != nil {
 			log.Printf("Failed to update outbox status: %v", err)

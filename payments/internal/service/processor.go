@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
@@ -27,8 +28,9 @@ func NewPaymentProcessor(brokers string, db *sql.DB) *PaymentProcessor {
 		Brokers:  []string{brokers},
 		Topic:    "orders.created",
 		GroupID:  "payments-group",
-		MinBytes: 10e3, // 10KB
-		MaxBytes: 10e6, // 10MB
+		MinBytes: 1,
+		MaxBytes: 10e6,
+		MaxWait:  10 * time.Millisecond,
 	})
 	return &PaymentProcessor{db: db, reader: reader}
 }
@@ -42,11 +44,9 @@ func (p *PaymentProcessor) Start(ctx context.Context) {
 			log.Printf("Error fetching message: %v", err)
 			continue
 		}
-		// Обрабатываем транзакционно
 		if err := p.processMessage(ctx, m); err != nil {
 			log.Printf("Error processing message: %v", err)
 		} else {
-			// Подтверждаем Kafka, что всё ок, только если транзакция прошла
 			p.reader.CommitMessages(ctx, m)
 			log.Printf("Order processed successfully. Offset: %d", m.Offset)
 		}
@@ -65,7 +65,7 @@ func (p *PaymentProcessor) processMessage(ctx context.Context, m kafka.Message) 
 	}
 	defer tx.Rollback()
 
-	// Inbox (Идемпотентность)
+	// Inbox
 	// Проверяем, обрабатывали ли мы этот заказ
 	var exists int
 	err = tx.QueryRowContext(ctx, "SELECT 1 FROM inbox WHERE msg_id = $1", msgKey).Scan(&exists)
@@ -74,7 +74,7 @@ func (p *PaymentProcessor) processMessage(ctx context.Context, m kafka.Message) 
 		return tx.Commit()
 	}
 
-	// Бизнес-логика (Списание денег)
+	// Бизнес-логика
 	// Пытаемся списать деньги. Возвращаем user_id, если списание прошло.
 	// balance >= $2 гарантирует, что мы не уйдем в минус.
 	var uid string
@@ -94,7 +94,7 @@ func (p *PaymentProcessor) processMessage(ctx context.Context, m kafka.Message) 
 		return fmt.Errorf("db error: %w", err)
 	}
 
-	// Outbox (Ответ)
+	// Outbox
 	// Готовим ответ для Order Service
 	replyPayload, _ := json.Marshal(map[string]interface{}{
 		"order_id": event.OrderID,
@@ -113,6 +113,5 @@ func (p *PaymentProcessor) processMessage(ctx context.Context, m kafka.Message) 
 	if err != nil {
 		return fmt.Errorf("inbox write error: %w", err)
 	}
-
 	return tx.Commit()
 }

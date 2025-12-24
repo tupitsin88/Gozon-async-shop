@@ -19,7 +19,7 @@ func NewProducer(brokers string, topic string) *Producer {
 		Balancer:               &kafka.LeastBytes{},
 		AllowAutoTopicCreation: true,
 		RequiredAcks:           kafka.RequireAll,
-		WriteTimeout:           10 * time.Second,
+		BatchTimeout:           10 * time.Millisecond,
 	}
 	log.Printf("Kafka Producer initialized for topic: %s at %s", topic, brokers)
 	return &Producer{writer: writer}

@@ -65,7 +65,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.AccountRequest"
+                            "$ref": "#/definitions/handler.AccountRequest"
                         }
                     }
                 ],
@@ -105,7 +105,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.DepositRequest"
+                            "$ref": "#/definitions/handler.DepositRequest"
                         }
                     }
                 ],
@@ -127,7 +127,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "internal_handler.AccountRequest": {
+        "handler.AccountRequest": {
             "type": "object",
             "properties": {
                 "user_id": {
@@ -135,7 +135,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler.DepositRequest": {
+        "handler.DepositRequest": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -146,17 +146,21 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "externalDocs": {
+        "description": "OpenAPI",
+        "url": "https://swagger.io/resources/open-api/"
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8081",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Gozon Payments API",
+	Description:      "Сервис платежей с поддержкой идемпотентности (Inbox Pattern).\nОбрабатывает транзакции, хранит балансы пользователей и защищает от двойных списаний.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

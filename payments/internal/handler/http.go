@@ -41,7 +41,6 @@ func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad JSON", http.StatusBadRequest)
 		return
 	}
-
 	_, err := h.db.Exec("INSERT INTO accounts (user_id, balance) VALUES ($1, 0)", req.UserID)
 	if err != nil {
 		http.Error(w, "Error creating account (maybe exists?): "+err.Error(), http.StatusInternalServerError)
@@ -67,12 +66,10 @@ func (h *Handler) Deposit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad JSON", http.StatusBadRequest)
 		return
 	}
-
 	if req.Amount <= 0 {
 		http.Error(w, "Amount must be positive", http.StatusBadRequest)
 		return
 	}
-
 	_, err := h.db.Exec("UPDATE accounts SET balance = balance + $1 WHERE user_id = $2", req.Amount, req.UserID)
 	if err != nil {
 		http.Error(w, "Error updating balance: "+err.Error(), http.StatusInternalServerError)
@@ -91,13 +88,11 @@ func (h *Handler) Deposit(w http.ResponseWriter, r *http.Request) {
 // @Router       /api/payments/balance [get]
 func (h *Handler) GetBalance(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("user_id")
-
 	var balance int64
 	err := h.db.QueryRow("SELECT balance FROM accounts WHERE user_id = $1", userID).Scan(&balance)
 	if err != nil {
 		http.Error(w, "Account not found", http.StatusNotFound)
 		return
 	}
-
 	json.NewEncoder(w).Encode(map[string]int64{"balance": balance})
 }

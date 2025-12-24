@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  internal_handler.CreateOrderRequest:
+  handler.CreateOrderRequest:
     properties:
       amount:
         type: integer
@@ -9,14 +9,53 @@ definitions:
       user_id:
         type: string
     type: object
+  storage.Order:
+    properties:
+      amount:
+        type: integer
+      description:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: string
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
 host: localhost:8000
 info:
   contact: {}
-  description: Сервис заказов с Transactional Outbox и WebSockets.
+  description: |-
+    Сервис управления заказами.
+    Реализует паттерн Transactional Outbox для гарантированной отправки событий в Kafka.
+    Поддерживает Real-time уведомления клиентов через WebSockets.
   title: Gozon Orders API
   version: "1.0"
 paths:
   /api/orders:
+    get:
+      description: Возвращает историю заказов пользователя
+      parameters:
+      - description: User UUID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/storage.Order'
+            type: array
+      summary: Список заказов
+      tags:
+      - orders
     post:
       consumes:
       - application/json
@@ -28,7 +67,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/internal_handler.CreateOrderRequest'
+          $ref: '#/definitions/handler.CreateOrderRequest'
       produces:
       - application/json
       responses:

@@ -63,3 +63,31 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		"message":  "Заказ создан и ожидает оплаты",
 	})
 }
+
+// GetOrders godoc
+// @Summary      Список заказов
+// @Description  Возвращает историю заказов пользователя
+// @Tags         orders
+// @Produce      json
+// @Param        user_id query string true "User UUID"
+// @Success      200  {array}  storage.Order
+// @Router       /api/orders [get]
+func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
+	userIDStr := r.URL.Query().Get("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user_id", http.StatusBadRequest)
+		return
+	}
+	orders, err := h.repo.GetOrdersByUserID(r.Context(), userID)
+	if err != nil {
+		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	// Если заказов нет, возвращаем пустой массив [], а не null
+	if orders == nil {
+		orders = []*storage.Order{}
+	}
+	json.NewEncoder(w).Encode(orders)
+}

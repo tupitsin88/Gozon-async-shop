@@ -18,6 +18,16 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @title           Gozon Payments API
+// @version         1.0
+// @description     Сервис платежей с поддержкой идемпотентности (Inbox Pattern).
+// @description     Обрабатывает транзакции, хранит балансы пользователей и защищает от двойных списаний.
+
+// @host      localhost:8081
+// @BasePath  /
+
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
 	dbConnStr := os.Getenv("DATABASE_URL")
 	if dbConnStr == "" {
@@ -27,7 +37,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	storage.InitSchema(db)
 
 	// Kafka Consumer
@@ -35,10 +44,8 @@ func main() {
 	if kafkaBrokers == "" {
 		kafkaBrokers = "localhost:9092"
 	}
-
 	processor := service.NewPaymentProcessor(kafkaBrokers, db)
 	go processor.Start(context.Background())
-
 	// Kafka Producer + Relay
 	producer := broker.NewProducer(kafkaBrokers, "payments.processed")
 	go service.StartRelay(context.Background(), db, producer)

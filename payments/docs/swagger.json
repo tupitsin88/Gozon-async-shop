@@ -1,8 +1,13 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "Сервис платежей с поддержкой идемпотентности (Inbox Pattern).\nОбрабатывает транзакции, хранит балансы пользователей и защищает от двойных списаний.",
+        "title": "Gozon Payments API",
+        "contact": {},
+        "version": "1.0"
     },
+    "host": "localhost:8081",
+    "basePath": "/",
     "paths": {
         "/api/payments/balance": {
             "get": {
@@ -54,7 +59,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.AccountRequest"
+                            "$ref": "#/definitions/handler.AccountRequest"
                         }
                     }
                 ],
@@ -94,7 +99,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.DepositRequest"
+                            "$ref": "#/definitions/handler.DepositRequest"
                         }
                     }
                 ],
@@ -116,7 +121,7 @@
         }
     },
     "definitions": {
-        "internal_handler.AccountRequest": {
+        "handler.AccountRequest": {
             "type": "object",
             "properties": {
                 "user_id": {
@@ -124,7 +129,7 @@
                 }
             }
         },
-        "internal_handler.DepositRequest": {
+        "handler.DepositRequest": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -135,5 +140,9 @@
                 }
             }
         }
+    },
+    "externalDocs": {
+        "description": "OpenAPI",
+        "url": "https://swagger.io/resources/open-api/"
     }
 }

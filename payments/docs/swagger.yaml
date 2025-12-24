@@ -1,18 +1,28 @@
+basePath: /
 definitions:
-  internal_handler.AccountRequest:
+  handler.AccountRequest:
     properties:
       user_id:
         type: string
     type: object
-  internal_handler.DepositRequest:
+  handler.DepositRequest:
     properties:
       amount:
         type: integer
       user_id:
         type: string
     type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8081
 info:
   contact: {}
+  description: |-
+    Сервис платежей с поддержкой идемпотентности (Inbox Pattern).
+    Обрабатывает транзакции, хранит балансы пользователей и защищает от двойных списаний.
+  title: Gozon Payments API
+  version: "1.0"
 paths:
   /api/payments/balance:
     get:
@@ -45,7 +55,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/internal_handler.AccountRequest'
+          $ref: '#/definitions/handler.AccountRequest'
       produces:
       - application/json
       responses:
@@ -72,7 +82,7 @@ paths:
         name: input
         required: true
         schema:
-          $ref: '#/definitions/internal_handler.DepositRequest'
+          $ref: '#/definitions/handler.DepositRequest'
       produces:
       - application/json
       responses:

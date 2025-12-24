@@ -65,3 +65,25 @@ func (r *OrderRepository) CreateOrderWithOutbox(ctx context.Context, order *Orde
 	}
 	return nil
 }
+
+// GetOrdersByUserID возвращает список заказов пользователя
+func (r *OrderRepository) GetOrdersByUserID(ctx context.Context, userID uuid.UUID) ([]*Order, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT id, user_id, amount, description, status 
+		FROM orders 
+		WHERE user_id = $1 
+		ORDER BY created_at DESC`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var orders []*Order
+	for rows.Next() {
+		var o Order
+		if err := rows.Scan(&o.ID, &o.UserID, &o.Amount, &o.Description, &o.Status); err != nil {
+			return nil, err
+		}
+		orders = append(orders, &o)
+	}
+	return orders, nil
+}

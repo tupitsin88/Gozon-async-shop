@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Сервис заказов с Transactional Outbox и WebSockets.",
+        "description": "Сервис управления заказами.\nРеализует паттерн Transactional Outbox для гарантированной отправки событий в Kafka.\nПоддерживает Real-time уведомления клиентов через WebSockets.",
         "title": "Gozon Orders API",
         "contact": {},
         "version": "1.0"
@@ -10,6 +10,36 @@
     "basePath": "/",
     "paths": {
         "/api/orders": {
+            "get": {
+                "description": "Возвращает историю заказов пользователя",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "Список заказов",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/storage.Order"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Создает заказ и асинхронно запускает процесс оплаты через Transactional Outbox",
                 "consumes": [
@@ -29,7 +59,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.CreateOrderRequest"
+                            "$ref": "#/definitions/handler.CreateOrderRequest"
                         }
                     }
                 ],
@@ -58,7 +88,7 @@
         }
     },
     "definitions": {
-        "internal_handler.CreateOrderRequest": {
+        "handler.CreateOrderRequest": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -71,6 +101,30 @@
                     "type": "string"
                 }
             }
+        },
+        "storage.Order": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
         }
+    },
+    "externalDocs": {
+        "description": "OpenAPI",
+        "url": "https://swagger.io/resources/open-api/"
     }
 }

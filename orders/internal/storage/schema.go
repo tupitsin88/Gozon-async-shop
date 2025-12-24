@@ -13,7 +13,7 @@ func InitSchema(db *sql.DB) {
         user_id UUID NOT NULL,
         amount BIGINT NOT NULL,
         description TEXT,
-        status VARCHAR(50) NOT NULL, -- NEW, PAID, FAILED
+        status VARCHAR(50) NOT NULL,
         created_at TIMESTAMP DEFAULT NOW()
     );
 

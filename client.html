@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Gozon Simple UI</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 40px 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .section {
+            background: #1e293b;
+            padding: 24px;
+            margin-bottom: 24px;
+            border-radius: 16px;
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s;
+        }
+
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            border-color: #475569;
+        }
+
+        h3 {
+            margin-top: 0;
+            color: #f8fafc;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            margin: 8px 0;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            box-sizing: border-box;
+            font-size: 15px;
+            color: #fff;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            filter: brightness(110%);
+            transform: scale(1.02);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-connect {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-deposit {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .balance-box {
+            margin-top: 15px;
+            padding: 16px;
+            background: #0f172a;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #38bdf8;
+            border: 1px solid #334155;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+
+        #toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: #1e293b;
+            color: #f1f5f9;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            min-width: 280px;
+            animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            display: flex;
+            align-items: center;
+            border: 1px solid #334155;
+        }
+
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #ef4444; }
+        .toast.info { border-left: 4px solid #3b82f6; }
+
+        .toast-content { display: flex; flex-direction: column; }
+        .toast-title { font-weight: 700; margin-bottom: 4px; font-size: 14px; }
+        .toast-body { font-size: 13px; color: #94a3b8; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div class="section">
+    <h3>Подключение счета</h3>
+    <input type="text" id="userID" value="550e8400-e29b-41d4-a716-446655440000" placeholder="UUID счета">
+    <button class="btn-connect" onclick="connectAndValidate()">Подключиться</button>
+    <div class="balance-box">
+        <span style="color: #94a3b8; font-size: 14px; font-weight: normal; display: block; margin-bottom: 5px;">Текущий баланс</span>
+        <span id="balance">---</span> ₽
+    </div>
+</div>
+
+<div class="section">
+    <h3>Маркетплейс</h3>
+    <input type="text" id="desc" value="MacBook Air M4" style="font-weight: bold;">
+    <input type="number" id="price" value="1000" placeholder="Цена">
+    <button class="btn-buy" onclick="buy()">Оформить заказ</button>
+</div>
+
+<div class="section">
+    <h3>Пополнение</h3>
+    <input type="number" id="depositAmount" value="1000">
+    <button class="btn-deposit" onclick="deposit()">Внести средства</button>
+</div>
+
+<script>
+    let socket;
+    let reconnectInterval;
+    const GATEWAY = 'http://localhost:8000';
+    let isConnected = false;
+
+    function showToast(title, message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<div class="toast-content"><span class="toast-title">${title}</span><span class="toast-body">${message}</span></div>`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.animation = 'fadeOut 0.5s ease-in forwards'; setTimeout(() => toast.remove(), 500); }, 4000);
+    }
+
+    async function connectAndValidate() {
+        const uid = document.getElementById('userID').value.trim();
+        if (!uid) return showToast("Ошибка", "Введите UUID!", "error");
+
+        const exists = await getBalance(true);
+        if (!exists) {
+            if(socket) socket.close();
+            document.getElementById('balance').innerText = "---";
+            return;
+        }
+
+        if(socket) socket.close();
+        socket = new WebSocket(`ws://localhost:8000/ws?user_id=${uid}`);
+
+        socket.onopen = () => {
+            showToast("Система", "Успешное подключение к серверу", "info");
+            isConnected = true;
+            if(reconnectInterval) clearInterval(reconnectInterval);
+        };
+
+        socket.onclose = (event) => {
+            isConnected = false;
+            if (!event.wasClean && isConnected) {
+                if(!reconnectInterval) reconnectInterval = setInterval(() => connectAndValidate(), 3000);
+            }
+        };
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.status === 'FINISHED') {
+                showToast("Успешная оплата", `Заказ ${data.order_id.slice(0,6)} обработан`, "success");
+                getBalance();
+            } else if (data.status === 'CANCELLED') {
+                showToast("Отказ", "Недостаточно средств на счете", "error");
+                getBalance();
+            }
+        };
+    }
+
+    async function getBalance(isCheck = false) {
+        const uid = document.getElementById('userID').value.trim();
+        try {
+            const res = await fetch(`${GATEWAY}/api/payments/balance?user_id=${uid}`);
+
+            if (res.status === 400 || res.status === 404 || res.status === 500) {
+                if (isCheck) showToast("Ошибка доступа", "Счет не найден", "error");
+                document.getElementById('balance').innerText = "Ошибка";
+                return false;
+            }
+
+            const data = await res.json();
+            document.getElementById('balance').innerText = data.balance;
+            return true;
+        } catch(e) {
+            if (isCheck) showToast("Нет сети", "Сервер недоступен", "error");
+            return false;
+        }
+    }
+
+    async function buy() {
+        const uid = document.getElementById('userID').value.trim();
+        const desc = document.getElementById('desc').value;
+        const amount = parseInt(document.getElementById('price').value);
+
+        if(!uid) return showToast("Ошибка", "Сначала подключитесь к счету", "error");
+
+        showToast("Обработка", "Заказ отправлен в систему...", "info");
+        try {
+            const res = await fetch(`${GATEWAY}/api/orders`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ user_id: uid, description: desc, amount: amount })
+            });
+            if(!res.ok) throw new Error();
+        } catch(e) {
+            showToast("Ошибка", "Сбой при создании заказа", "error");
+        }
+    }
+
+    async function deposit() {
+        const uid = document.getElementById('userID').value.trim();
+        const amount = parseInt(document.getElementById('depositAmount').value);
+
+        if(!uid) return showToast("Ошибка", "Сначала подключитесь к счету", "error");
+
+        const res = await fetch(`${GATEWAY}/api/payments/deposit`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ user_id: uid, amount: amount })
+        });
+
+        if (res.ok) {
+            showToast("Депозит", `Запрос на ${amount} ₽ отправлен`, "info");
+            setTimeout(getBalance, 200);
+        } else {
+            showToast("Ошибка", "Счет не найден", "error");
+        }
+    }
+</script>
+</body>
+</html>

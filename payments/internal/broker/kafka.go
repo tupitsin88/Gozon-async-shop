@@ -19,10 +19,13 @@ func NewProducer(brokers string, topic string) *Producer {
 		Balancer:               &kafka.LeastBytes{},
 		AllowAutoTopicCreation: true,
 		RequiredAcks:           kafka.RequireAll,
-		WriteTimeout:           10 * time.Second,
+		BatchTimeout:           10 * time.Millisecond,
+		BatchSize:              1,
 	}
 	log.Printf("Kafka Producer initialized for topic: %s at %s", topic, brokers)
-	return &Producer{writer: writer}
+	return &Producer{
+		writer: writer,
+	}
 }
 
 func (p *Producer) SendMessage(ctx context.Context, key string, value []byte) error {
